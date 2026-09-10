@@ -7,7 +7,7 @@ from langchain_core.embeddings import Embeddings
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 
 from ragsuite.core.config import load_conf
-from ragsuite.core.ports import TextSplitter
+from ragsuite.core.ports import Splitter
 from ragsuite.core.types import QueryStr
 
 # TODO: cache which documents have been indexed etc.
@@ -20,7 +20,7 @@ class ChromaDocumentRetriever:
     def __init__(
         self,
         docs: List[Document],
-        text_splitter: TextSplitter,
+        text_splitter: Splitter,
         chroma_index_dir: str = None,
         emb_model: Embeddings = None,
     ):

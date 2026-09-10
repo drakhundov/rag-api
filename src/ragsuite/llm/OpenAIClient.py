@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Literal
 
 from langchain_core.documents import Document
 from langchain_core.language_models.base import LanguageModelInput
@@ -18,7 +18,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 # Interface: ports/LLMClient
 class OpenAIClient(Runnable):
-    def __init__(self, model_name: str, api_key: SecretStr | None = None):
+    """Client for OpenAI-compatible models."""
+    def __init__(self, model_name: Literal["20b"] | Literal["120b"], api_key: SecretStr | None = None):
         logger.debug("Starting OpenAIClient initialization")
         if api_key is None:
             with load_conf() as conf:

@@ -4,7 +4,7 @@ from typing import List, Dict
 from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
 
-from ragsuite.core.ports import DocumentRetriever, LLMClient
+from ragsuite.core.ports import Retriever, LLMClient
 from ragsuite.routing import HeuristicRouter
 from ragsuite.core.types import RRFConfig, QueryStr, QueryList, TranslationContext
 from ragsuite.utilities import cli
@@ -16,7 +16,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 class RAGEngine:
     def __init__(
-        self, doc_retriever: DocumentRetriever, chat_model: LLMClient, sys_prompt_template: PromptTemplate,
+        self, doc_retriever: Retriever, chat_model: LLMClient, sys_prompt_template: PromptTemplate,
         rrf_conf: RRFConfig | None
     ):
         self.doc_retriever = doc_retriever
@@ -37,15 +37,15 @@ class RAGEngine:
         qlist: QueryList = router.run_route()
         docs: List[List[Document]] = []
         for q in qlist:
-            docs.append(self.doc_retriever.retrieve_with_query(q, top_k=top_k))
+            docs.append(self.doc_retriever.retrieve(q, top_k=top_k))
         # Weed out the most relevant documents using Reciprocal Rank Fusion.
         ranked_docs: List[Document] = self.perform_rrf(docs)
         return self.chat_model.generate(self.sys_prompt_template, query, ranked_docs)
 
     @cli.with_temp_message(message="Performing reciprocal rank fusion...")
     def perform_rrf(self, docs: List[List[Document]]) -> List[Document]:
-        top_k = self.config.top_k
-        k_rrf = self.config.k_rrf
+        top_k = self.rrf_conf.top_k
+        k_rrf = self.rrf_conf.k_rrf
         logger.debug("Performing reciprocal rank fusion")
         scores: Dict[str, float] = {}
         first_seen: Dict[str, Document] = {}

@@ -54,7 +54,7 @@ class QueryList:
     """Stores the list of queries produced by various query translators along with the original query and the route (translation methods used)."""
     original_query: QueryStr
     queries: List[QueryStr]
-    route: TranslationRoute = field(default_factory=TranslationRoute)
+    route: TranslationRoute = field(default_factory=lambda: TranslationRoute([]))
 
     def __iter__(self):
         return iter(self.queries)

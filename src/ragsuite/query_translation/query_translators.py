@@ -34,16 +34,14 @@ class _QueryTranslatorImpl:
         )
         llm_response = chain.invoke(ctx_dict)
         # Remove dupliates while preserving order.
-        queries = []
         seen = set()
         for s in llm_response:
             s_norm = s.strip()
             if s_norm and s_norm not in seen:
                 seen.add(s_norm)
-                queries.append(s_norm)
         return QueryList(
             original_query=QueryStr(ctx_dict.get("query")),
-            queries=queries,
+            queries=list(seen),
         )
 
 

@@ -2,13 +2,13 @@
 import logging
 from typing import List, Dict, Tuple
 import re
+import os
 
 import numpy as np
 from langchain_core.documents import Document
 
 from ragsuite.core.types import SemanticTextSplitterConfig
-from ragsuite.store import CacheManager
-from ragsuite.core.types import CacheAttr
+from ragsuite.store import CacheStore
 from ragsuite.utilities import docutils, err, vector
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ class SemanticTextSplitter:
             breakpoint_percentile_threshold=self.breakpoint_percentile_threshold
         )
 
-        self.cached_splits_mng = CacheManager(label="semantic-text-splitter/cached_splits")
+        self.cached_splits_mng = CacheStore(svc_id="semantic-text-splitter")
 
         logger.debug("SemanticTextSplitter initialized")
 
@@ -111,7 +111,10 @@ class SemanticTextSplitter:
             all_chunks.extend(doc_splits)
             doc_hash = docutils.compute_doc_hash(doc)
             payload = {"conf": self.get_conf(), "doc": self._serialize_docs(doc_splits)}
-            self.cached_splits_mng.set(cache_id=doc_hash, data={CacheAttr.SPLITTER: payload})
+            self.cached_splits_mng.set(
+                cache_key=os.path.join("cached_splits", doc_hash),
+                data={"splitter": payload}
+            )
         self.session_store.dump(session_data={"splits": all_chunks})
         return all_chunks
 
@@ -120,7 +123,9 @@ class SemanticTextSplitter:
     ) -> Tuple[bool, List[Document]]:
         doc_hash = docutils.compute_doc_hash(doc)
         try:
-            cached_splits = self.cached_splits_mng.get(cache_id=doc_hash, attr=CacheAttr.SPLITTER)
+            cached_splits = self.cached_splits_mng.get(
+                cache_key=os.path.join("cached_splits", doc_hash)
+            )
             for k, v in conf.items():
                 if cached_splits.get(k) != v:
                     return False, []
